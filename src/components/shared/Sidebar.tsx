@@ -132,10 +132,10 @@ export function Sidebar({ className, isOpen = false }: SidebarProps) {
                       >
                         <Button
                           variant="ghost"
-                          className={`w-full justify-start text-left h-10 px-3 text-card-foreground border-l-2 ${
+                          className={`w-full justify-start text-left h-10 px-3 text-card-foreground border-l-2 focus-visible:ring-inset ${
                             isActive
                               ? 'bg-accent text-accent-foreground border-primary'
-                              : 'border-transparent hover:bg-accent hover:text-accent-foreground'
+                              : 'hover:bg-accent hover:text-accent-foreground'
                           }`}
                         >
                           <item.icon className="mr-3 h-4 w-4" />
