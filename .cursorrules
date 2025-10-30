@@ -1,0 +1,32 @@
+# Instructions
+
+## shadcn instructions
+
+Use the latest version of Shadcn to install new components, like this command to add a button component:
+
+```bash
+pnpm dlx shadcn@canary add <component>
+```
+
+## Drizzle Instructions
+
+Always use these template for creating new table definitions
+
+```typescript
+const table = pgTable(
+  'table_name',
+  {
+    id: string,
+  },
+  (table) => [index().on(table.d)],
+)
+```
+
+## Zod Instructions
+
+Always use this for UUID and and Date or Datetime definitions:
+
+```typescript
+z.uuid()
+z.iso.date()
+```

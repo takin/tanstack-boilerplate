@@ -1,0 +1,8 @@
+.env*
+.prettier*
+.eslint*
+*.md
+.cursorrules
+.nitro
+.tanstack
+drizzle

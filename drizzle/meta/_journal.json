@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1761734871018,
+      "tag": "0000_next_norrin_radd",
+      "breakpoints": true
+    }
+  ]
+}
