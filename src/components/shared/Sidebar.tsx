@@ -21,6 +21,7 @@ import { logoutFn } from '@/server/auth.function'
 import { useAuth } from '@/providers/provider.auth'
 import { toast } from 'sonner'
 import { Link, useNavigate, useRouter } from '@tanstack/react-router'
+import { motion } from 'framer-motion'
 
 interface SidebarProps {
   className?: string
@@ -72,28 +73,39 @@ export function Sidebar({ className, isOpen = false }: SidebarProps) {
     },
   ]
 
-  console.log('sidebar rendered')
-
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.25, delay: 0.05 }}
       className={`fixed inset-y-0 left-0 z-50 w-64 transform bg-card border-r border-border transition-transform duration-200 ease-in-out ${
         isOpen ? 'translate-x-0' : '-translate-x-full'
       } md:translate-x-0 md:static md:h-screen flex flex-col ${className}`}
     >
       {/* Header */}
-      <div className="p-6 border-b border-border">
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, delay: 0.08 }}
+        className="p-6 border-b border-border"
+      >
         <h1 className="text-xl font-bold text-card-foreground">
           Incident Report
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
           PT. Pertamina Patra Niaga
         </p>
-      </div>
+      </motion.div>
 
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-6">
         {menuItems.map((group, groupIndex) => (
-          <div key={groupIndex}>
+          <motion.div
+            key={groupIndex}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: 0.1 + groupIndex * 0.05 }}
+          >
             <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
               {group.group}
             </h3>
@@ -101,23 +113,45 @@ export function Sidebar({ className, isOpen = false }: SidebarProps) {
               {group.items.map((item, itemIndex) => (
                 <li key={itemIndex}>
                   <Link to={item.href}>
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start text-left h-10 px-3 text-card-foreground hover:bg-accent hover:text-accent-foreground"
-                    >
-                      <item.icon className="mr-3 h-4 w-4" />
-                      {item.label}
-                    </Button>
+                    {({ isActive }) => (
+                      <motion.div
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{
+                          duration: 0.3,
+                          delay: 0.14 + groupIndex * 0.05 + itemIndex * 0.04,
+                        }}
+                        whileHover={{ x: 2 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <Button
+                          variant="ghost"
+                          className={`w-full justify-start text-left h-10 px-3 text-card-foreground border-l-2 ${
+                            isActive
+                              ? 'bg-accent text-accent-foreground border-primary'
+                              : 'border-transparent hover:bg-accent hover:text-accent-foreground'
+                          }`}
+                        >
+                          <item.icon className="mr-3 h-4 w-4" />
+                          {item.label}
+                        </Button>
+                      </motion.div>
+                    )}
                   </Link>
                 </li>
               ))}
             </ul>
-          </div>
+          </motion.div>
         ))}
       </nav>
 
       {/* User Menu */}
-      <div className="p-4 border-t border-border">
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, delay: 0.2 }}
+        className="p-4 border-t border-border"
+      >
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -168,7 +202,7 @@ export function Sidebar({ className, isOpen = false }: SidebarProps) {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   )
 }
