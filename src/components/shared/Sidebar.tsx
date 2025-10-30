@@ -32,7 +32,7 @@ interface SidebarProps {
 export function Sidebar({ className, isOpen = false }: SidebarProps) {
   const router = useRouter()
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { user, setUser } = useAuth()
 
   const [isDark, setIsDark] = useState(false)
 
@@ -56,6 +56,8 @@ export function Sidebar({ className, isOpen = false }: SidebarProps) {
       },
     })
 
+    setUser(null)
+
     await navigate({ to: '/' })
   }
 
@@ -72,6 +74,10 @@ export function Sidebar({ className, isOpen = false }: SidebarProps) {
       items: [{ icon: Users, label: 'User Management', href: '/admin/users' }],
     },
   ]
+
+  const displayedMenus = ['super_admin', 'admin'].includes(user?.role ?? '')
+    ? menuItems
+    : menuItems.filter((menu) => menu.group !== 'Admin')
 
   return (
     <motion.div
@@ -99,7 +105,7 @@ export function Sidebar({ className, isOpen = false }: SidebarProps) {
 
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-6">
-        {menuItems.map((group, groupIndex) => (
+        {displayedMenus.map((group, groupIndex) => (
           <motion.div
             key={groupIndex}
             initial={{ opacity: 0, y: 12 }}

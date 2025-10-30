@@ -5,10 +5,12 @@ import { toast } from 'sonner'
 import { Card, CardHeader, CardContent } from '@/components/ui/card'
 import { useNavigate, useRouter } from '@tanstack/react-router'
 import { motion } from 'framer-motion'
+import { useAuth } from '@/providers/provider.auth'
 
 export function LoginComponent() {
   const router = useRouter()
   const navigate = useNavigate()
+  const { setUser } = useAuth()
 
   const form = useAppForm({
     defaultValues: {
@@ -31,6 +33,8 @@ export function LoginComponent() {
           user: data ?? null,
         },
       })
+
+      setUser(data ?? null)
 
       await navigate({
         to: '/dashboard',

@@ -10,14 +10,15 @@ import { getCurrentUserFn } from '@/server/auth.function'
 
 type AuthContextType = {
   user: UserInfo | null
+  setUser: (user: UserInfo | null) => void
   isLoading: boolean
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [isLoading, setIsLoading] = useState(false)
   const [user, setUser] = useState<UserInfo | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
 
   const getCurrentUser = useEffectEvent(async () => {
     setIsLoading(true)
@@ -31,7 +32,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, isLoading }}>
+    <AuthContext.Provider value={{ user, setUser, isLoading }}>
       {children}
     </AuthContext.Provider>
   )
