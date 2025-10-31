@@ -22,6 +22,7 @@ import { toast } from 'sonner'
 import { Link, useNavigate, useRouter } from '@tanstack/react-router'
 import { motion } from 'framer-motion'
 import { useTheme } from '@/providers/provider.theme'
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
 
 interface SidebarProps {
   className?: string
@@ -33,6 +34,12 @@ export function Sidebar({ className, isOpen = false }: SidebarProps) {
   const router = useRouter()
   const navigate = useNavigate()
   const { user, setUser } = useAuth()
+
+  const { appName, appVersion, appDescription } = router.options.context as {
+    appName: string
+    appVersion: string
+    appDescription: string
+  }
 
   const { theme, setTheme } = useTheme()
 
@@ -94,12 +101,8 @@ export function Sidebar({ className, isOpen = false }: SidebarProps) {
         transition={{ duration: 0.35, delay: 0.08 }}
         className="p-6 border-b border-border"
       >
-        <h1 className="text-xl font-bold text-card-foreground">
-          Incident Report
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          PT. Pertamina Patra Niaga
-        </p>
+        <h1 className="text-xl font-bold text-card-foreground">{appName}</h1>
+        <p className="text-sm text-muted-foreground mt-1">{appDescription}</p>
       </motion.div>
 
       {/* Navigation */}
@@ -150,6 +153,18 @@ export function Sidebar({ className, isOpen = false }: SidebarProps) {
         ))}
       </nav>
 
+      {/* App Version */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, delay: 0.18 }}
+        className="px-4 py-2"
+      >
+        <p className="text-xs text-muted-foreground text-center">
+          Version {appVersion}
+        </p>
+      </motion.div>
+
       {/* User Menu */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -164,9 +179,14 @@ export function Sidebar({ className, isOpen = false }: SidebarProps) {
               className="w-full justify-between h-12 px-3 text-left"
             >
               <div className="flex items-center">
-                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center mr-3">
-                  <User className="h-4 w-4 text-primary-foreground" />
-                </div>
+                <Avatar className="w-10 h-10 rounded-full bg-primary flex items-center justify-center mr-3 border border-border">
+                  <AvatarFallback>
+                    {user?.name
+                      ?.split(' ')
+                      .map((name) => name[0])
+                      .join('')}
+                  </AvatarFallback>
+                </Avatar>
                 <div className="flex flex-col">
                   <span className="text-sm font-medium text-card-foreground">
                     {user?.name}

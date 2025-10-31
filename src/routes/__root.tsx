@@ -14,6 +14,9 @@ import NotFound from '@/components/shared/NotFound'
 interface MyRouterContext {
   queryClient: QueryClient
   user: UserInfo | null
+  appName: string
+  appVersion: string
+  appDescription: string
 }
 
 export const Route = createRootRouteWithContext<MyRouterContext>()({
@@ -27,7 +30,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
         content: 'width=device-width, initial-scale=1',
       },
       {
-        title: 'Incident Report - PT. Pertamina Patra Niaga',
+        title: 'Propertek - Property Management System',
       },
     ],
     links: [
