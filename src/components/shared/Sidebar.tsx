@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import {
   LayoutDashboard,
   FileText,
@@ -22,6 +21,7 @@ import { useAuth } from '@/providers/provider.auth'
 import { toast } from 'sonner'
 import { Link, useNavigate, useRouter } from '@tanstack/react-router'
 import { motion } from 'framer-motion'
+import { useTheme } from '@/providers/provider.theme'
 
 interface SidebarProps {
   className?: string
@@ -34,11 +34,10 @@ export function Sidebar({ className, isOpen = false }: SidebarProps) {
   const navigate = useNavigate()
   const { user, setUser } = useAuth()
 
-  const [isDark, setIsDark] = useState(false)
+  const { theme, setTheme } = useTheme()
 
   const toggleTheme = () => {
-    setIsDark(!isDark)
-    document.documentElement.classList.toggle('dark')
+    setTheme(theme === 'light' ? 'dark' : 'light')
   }
 
   const handleLogout = async () => {
@@ -186,7 +185,7 @@ export function Sidebar({ className, isOpen = false }: SidebarProps) {
               <span>My Profile</span>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={toggleTheme}>
-              {isDark ? (
+              {theme === 'light' ? (
                 <>
                   <Sun className="mr-2 h-4 w-4" />
                   <span>Light Mode</span>

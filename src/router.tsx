@@ -2,6 +2,7 @@ import { createRouter } from '@tanstack/react-router'
 import { setupRouterSsrQueryIntegration } from '@tanstack/react-router-ssr-query'
 import * as RootProvider from './providers/provider.root'
 import { AuthProvider } from './providers/provider.auth'
+import { ThemeProvider } from './providers/provider.theme'
 
 // Import the generated route tree
 import { routeTree } from './routeTree.gen'
@@ -19,7 +20,9 @@ export const getRouter = async () => {
     Wrap: (props: { children: React.ReactNode }) => {
       return (
         <RootProvider.Provider {...rootContext}>
-          <AuthProvider>{props.children}</AuthProvider>
+          <ThemeProvider>
+            <AuthProvider>{props.children}</AuthProvider>
+          </ThemeProvider>
         </RootProvider.Provider>
       )
     },
