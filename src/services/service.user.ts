@@ -37,3 +37,8 @@ export const authenticateUser = async (
   }
   return user
 }
+
+export const getUserList = async (): Promise<UserInfo[]> => {
+  const users = await db.query.dbSchemaUser.findMany()
+  return users
+}

@@ -14,7 +14,9 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProtectedReportRouteImport } from './routes/_protected/report'
 import { Route as ProtectedDashboardRouteImport } from './routes/_protected/dashboard'
 import { Route as ProtectedAdminRouteRouteImport } from './routes/_protected/admin/route'
-import { Route as ProtectedAdminUsersRouteImport } from './routes/_protected/admin/users'
+import { Route as ProtectedAdminUsersIndexRouteImport } from './routes/_protected/admin/users/index'
+import { Route as ProtectedAdminUsersUserIdRouteImport } from './routes/_protected/admin/users/$userId'
+import { Route as ProtectedAdminUsersUserIdEditRouteImport } from './routes/_protected/admin/users/$userId_.edit'
 
 const ProtectedRoute = ProtectedRouteImport.update({
   id: '/_protected',
@@ -40,25 +42,42 @@ const ProtectedAdminRouteRoute = ProtectedAdminRouteRouteImport.update({
   path: '/admin',
   getParentRoute: () => ProtectedRoute,
 } as any)
-const ProtectedAdminUsersRoute = ProtectedAdminUsersRouteImport.update({
-  id: '/users',
-  path: '/users',
-  getParentRoute: () => ProtectedAdminRouteRoute,
-} as any)
+const ProtectedAdminUsersIndexRoute =
+  ProtectedAdminUsersIndexRouteImport.update({
+    id: '/users/',
+    path: '/users/',
+    getParentRoute: () => ProtectedAdminRouteRoute,
+  } as any)
+const ProtectedAdminUsersUserIdRoute =
+  ProtectedAdminUsersUserIdRouteImport.update({
+    id: '/users/$userId',
+    path: '/users/$userId',
+    getParentRoute: () => ProtectedAdminRouteRoute,
+  } as any)
+const ProtectedAdminUsersUserIdEditRoute =
+  ProtectedAdminUsersUserIdEditRouteImport.update({
+    id: '/users/$userId_/edit',
+    path: '/users/$userId/edit',
+    getParentRoute: () => ProtectedAdminRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof ProtectedAdminRouteRouteWithChildren
   '/dashboard': typeof ProtectedDashboardRoute
   '/report': typeof ProtectedReportRoute
-  '/admin/users': typeof ProtectedAdminUsersRoute
+  '/admin/users/$userId': typeof ProtectedAdminUsersUserIdRoute
+  '/admin/users': typeof ProtectedAdminUsersIndexRoute
+  '/admin/users/$userId/edit': typeof ProtectedAdminUsersUserIdEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof ProtectedAdminRouteRouteWithChildren
   '/dashboard': typeof ProtectedDashboardRoute
   '/report': typeof ProtectedReportRoute
-  '/admin/users': typeof ProtectedAdminUsersRoute
+  '/admin/users/$userId': typeof ProtectedAdminUsersUserIdRoute
+  '/admin/users': typeof ProtectedAdminUsersIndexRoute
+  '/admin/users/$userId/edit': typeof ProtectedAdminUsersUserIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -67,13 +86,29 @@ export interface FileRoutesById {
   '/_protected/admin': typeof ProtectedAdminRouteRouteWithChildren
   '/_protected/dashboard': typeof ProtectedDashboardRoute
   '/_protected/report': typeof ProtectedReportRoute
-  '/_protected/admin/users': typeof ProtectedAdminUsersRoute
+  '/_protected/admin/users/$userId': typeof ProtectedAdminUsersUserIdRoute
+  '/_protected/admin/users/': typeof ProtectedAdminUsersIndexRoute
+  '/_protected/admin/users/$userId_/edit': typeof ProtectedAdminUsersUserIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/dashboard' | '/report' | '/admin/users'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/dashboard'
+    | '/report'
+    | '/admin/users/$userId'
+    | '/admin/users'
+    | '/admin/users/$userId/edit'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/dashboard' | '/report' | '/admin/users'
+  to:
+    | '/'
+    | '/admin'
+    | '/dashboard'
+    | '/report'
+    | '/admin/users/$userId'
+    | '/admin/users'
+    | '/admin/users/$userId/edit'
   id:
     | '__root__'
     | '/'
@@ -81,7 +116,9 @@ export interface FileRouteTypes {
     | '/_protected/admin'
     | '/_protected/dashboard'
     | '/_protected/report'
-    | '/_protected/admin/users'
+    | '/_protected/admin/users/$userId'
+    | '/_protected/admin/users/'
+    | '/_protected/admin/users/$userId_/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -126,22 +163,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProtectedAdminRouteRouteImport
       parentRoute: typeof ProtectedRoute
     }
-    '/_protected/admin/users': {
-      id: '/_protected/admin/users'
+    '/_protected/admin/users/': {
+      id: '/_protected/admin/users/'
       path: '/users'
       fullPath: '/admin/users'
-      preLoaderRoute: typeof ProtectedAdminUsersRouteImport
+      preLoaderRoute: typeof ProtectedAdminUsersIndexRouteImport
+      parentRoute: typeof ProtectedAdminRouteRoute
+    }
+    '/_protected/admin/users/$userId': {
+      id: '/_protected/admin/users/$userId'
+      path: '/users/$userId'
+      fullPath: '/admin/users/$userId'
+      preLoaderRoute: typeof ProtectedAdminUsersUserIdRouteImport
+      parentRoute: typeof ProtectedAdminRouteRoute
+    }
+    '/_protected/admin/users/$userId_/edit': {
+      id: '/_protected/admin/users/$userId_/edit'
+      path: '/users/$userId/edit'
+      fullPath: '/admin/users/$userId/edit'
+      preLoaderRoute: typeof ProtectedAdminUsersUserIdEditRouteImport
       parentRoute: typeof ProtectedAdminRouteRoute
     }
   }
 }
 
 interface ProtectedAdminRouteRouteChildren {
-  ProtectedAdminUsersRoute: typeof ProtectedAdminUsersRoute
+  ProtectedAdminUsersUserIdRoute: typeof ProtectedAdminUsersUserIdRoute
+  ProtectedAdminUsersIndexRoute: typeof ProtectedAdminUsersIndexRoute
+  ProtectedAdminUsersUserIdEditRoute: typeof ProtectedAdminUsersUserIdEditRoute
 }
 
 const ProtectedAdminRouteRouteChildren: ProtectedAdminRouteRouteChildren = {
-  ProtectedAdminUsersRoute: ProtectedAdminUsersRoute,
+  ProtectedAdminUsersUserIdRoute: ProtectedAdminUsersUserIdRoute,
+  ProtectedAdminUsersIndexRoute: ProtectedAdminUsersIndexRoute,
+  ProtectedAdminUsersUserIdEditRoute: ProtectedAdminUsersUserIdEditRoute,
 }
 
 const ProtectedAdminRouteRouteWithChildren =

@@ -1,4 +1,4 @@
-import { createFileRoute, redirect } from '@tanstack/react-router'
+import { createFileRoute, redirect, Outlet } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/_protected/admin')({
   beforeLoad: async ({ context }) => {
@@ -10,13 +10,5 @@ export const Route = createFileRoute('/_protected/admin')({
       throw redirect({ to: '/dashboard' })
     }
   },
-  component: RouteComponent,
+  component: () => <Outlet />,
 })
-
-function RouteComponent() {
-  return (
-    <>
-      <h1>Admin</h1>
-    </>
-  )
-}

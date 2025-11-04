@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Menu } from 'lucide-react'
 import { Sidebar } from '@/components/shared/Sidebar'
 import { redirect } from '@tanstack/react-router'
+import { NotFoundComponent } from '@/components/shared/NotFound'
 
 export const Route = createFileRoute('/_protected')({
   beforeLoad: async ({ context, location }) => {
@@ -17,6 +18,7 @@ export const Route = createFileRoute('/_protected')({
     }
   },
   component: RouteComponent,
+  notFoundComponent: NotFoundComponent,
 })
 
 function RouteComponent() {

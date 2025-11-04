@@ -1,8 +1,8 @@
-import * as React from 'react'
 import { Link } from '@tanstack/react-router'
 import { motion } from 'framer-motion'
+import { ArrowLeft, Home, LayoutDashboard, Sparkles } from 'lucide-react'
 
-export default function NotFound() {
+export function NotFoundComponent() {
   return (
     <main className="relative flex min-h-[80vh] w-full items-center justify-center overflow-hidden bg-background px-6 py-12 sm:py-16">
       {/* Decorative gradient blob */}
@@ -71,14 +71,14 @@ export default function NotFound() {
             to="/"
             className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
           >
-            <HomeIcon className="h-4 w-4" />
+            <Home className="h-4 w-4" />
             Go home
           </Link>
           <Link
             to="/dashboard"
             className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground shadow-sm transition hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
           >
-            <DashboardIcon className="h-4 w-4" />
+            <LayoutDashboard className="h-4 w-4" />
             Open dashboard
           </Link>
           <button
@@ -88,7 +88,7 @@ export default function NotFound() {
             }
             className="inline-flex items-center justify-center gap-2 rounded-lg border border-border/70 bg-transparent px-4 py-2.5 text-sm font-medium text-foreground/80 transition hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
           >
-            <ArrowLeftIcon className="h-4 w-4" />
+            <ArrowLeft className="h-4 w-4" />
             Go back
           </button>
         </motion.div>
@@ -104,7 +104,7 @@ export default function NotFound() {
             href="mailto:support@example.com?subject=Broken%20link%20report"
             className="inline-flex items-center gap-1 underline-offset-4 hover:underline"
           >
-            <SparkleIcon className="h-3.5 w-3.5" />
+            <Sparkles className="h-3.5 w-3.5" />
             Report an issue
           </a>
           <span aria-hidden>•</span>
@@ -121,78 +121,5 @@ export default function NotFound() {
         </motion.div>
       </motion.section>
     </main>
-  )
-}
-
-function HomeIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-      {...props}
-    >
-      <path d="m3 9 9-7 9 7" />
-      <path d="M9 22V12h6v10" />
-    </svg>
-  )
-}
-
-function DashboardIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-      {...props}
-    >
-      <rect x="3" y="3" width="7" height="9" rx="2" />
-      <rect x="14" y="3" width="7" height="5" rx="2" />
-      <rect x="14" y="10" width="7" height="11" rx="2" />
-      <rect x="3" y="14" width="7" height="7" rx="2" />
-    </svg>
-  )
-}
-
-function ArrowLeftIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-      {...props}
-    >
-      <path d="M12 19l-7-7 7-7" />
-      <path d="M19 12H5" />
-    </svg>
-  )
-}
-
-function SparkleIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-      {...props}
-    >
-      <path d="M12 3l2.5 5.5L20 11l-5.5 2.5L12 19l-2.5-5.5L4 11l5.5-2.5L12 3z" />
-    </svg>
   )
 }

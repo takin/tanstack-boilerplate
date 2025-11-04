@@ -9,7 +9,7 @@ import appCss from '../styles.css?url'
 
 import type { QueryClient } from '@tanstack/react-query'
 import type { UserInfo } from '@/db/schemas'
-import NotFound from '@/components/shared/NotFound'
+import { NotFoundComponent } from '@/components/shared/NotFound'
 
 interface MyRouterContext {
   queryClient: QueryClient
@@ -41,7 +41,8 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
     ],
   }),
   shellComponent: RootDocument,
-  notFoundComponent: NotFound,
+  notFoundComponent: NotFoundComponent,
+  errorComponent: NotFoundComponent,
 })
 
 function RootDocument({ children }: { children: React.ReactNode }) {

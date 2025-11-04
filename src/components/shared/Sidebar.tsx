@@ -22,7 +22,7 @@ import { toast } from 'sonner'
 import { Link, useNavigate, useRouter } from '@tanstack/react-router'
 import { motion } from 'framer-motion'
 import { useTheme } from '@/providers/provider.theme'
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
+import { Avatar, AvatarFallback } from '../ui/avatar'
 
 interface SidebarProps {
   className?: string
