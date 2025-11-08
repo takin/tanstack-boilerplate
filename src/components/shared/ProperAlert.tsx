@@ -33,9 +33,7 @@ export function ProperAlert({
   const [isOpen, setIsOpen] = React.useState(open)
 
   React.useEffect(() => {
-    if (open) {
-      setIsOpen(true)
-    }
+    setIsOpen(open)
   }, [open])
 
   const handleOpenChange = (newOpen: boolean) => {
@@ -54,10 +52,18 @@ export function ProperAlert({
   return (
     <AlertDialogPrimitive.Root open={isOpen} onOpenChange={handleOpenChange}>
       <AlertDialogPrimitive.Portal>
-        <AnimatePresence mode="wait" onExitComplete={handleExitComplete}>
+        <AnimatePresence onExitComplete={handleExitComplete}>
           {isOpen && (
             <>
-              <AlertDialogOverlay />
+              <AlertDialogOverlay asChild>
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="fixed inset-0 z-50 bg-black/80"
+                />
+              </AlertDialogOverlay>
               <AlertDialogPrimitive.Content asChild>
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}

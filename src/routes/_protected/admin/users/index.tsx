@@ -4,11 +4,10 @@ import { createFileRoute } from '@tanstack/react-router'
 import { motion } from 'framer-motion'
 import { AnimatePresence } from 'framer-motion'
 
-import { PlusIcon } from 'lucide-react'
+import { Loader2, PlusIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ProperAlert } from '@/components/shared/ProperAlert'
 import { useUsers } from './-hooks/useUsers'
-import { buildTableColumns } from './-components/table.columns'
 import { ProperTable } from '@/components/shared/ProperTable'
 
 export const Route = createFileRoute('/_protected/admin/users/')({
@@ -19,14 +18,13 @@ function UsersIndex() {
   const { user: currentUser } = Route.useRouteContext()
 
   const {
-    users,
     selectedUser,
     setSelectedUser,
     showConfirmationDialog,
     setShowConfirmationDialog,
-    handleDeleteConfirmation,
     handleDelete,
-    canBeDeleted,
+    table,
+    isLoading,
   } = useUsers(currentUser!)
 
   const header = useMemo(() => {
@@ -45,12 +43,6 @@ function UsersIndex() {
     )
   }, [])
 
-  const columns = buildTableColumns({
-    users,
-    onDelete: handleDeleteConfirmation,
-    canBeDeleted,
-  })
-
   return (
     <AnimatePresence>
       <motion.div
@@ -62,7 +54,13 @@ function UsersIndex() {
         {header}
         <Card className="mt-6 pt-4">
           <CardContent>
-            <ProperTable data={users} columns={columns} showZebraStripe />
+            {isLoading ? (
+              <div className="flex justify-center items-center h-full">
+                <Loader2 className="w-4 h-4 animate-spin" />
+              </div>
+            ) : (
+              <ProperTable table={table} />
+            )}
           </CardContent>
         </Card>
         <AnimatePresence mode="wait">
@@ -71,6 +69,7 @@ function UsersIndex() {
               key="delete-dialog"
               open={showConfirmationDialog}
               setOpen={(open) => {
+                setShowConfirmationDialog(open)
                 if (!open) setSelectedUser(null)
               }}
               onConfirm={handleDelete}
