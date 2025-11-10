@@ -9,26 +9,33 @@ import { Button } from '@/components/ui/button'
 import { ProperAlert } from '@/components/shared/ProperAlert'
 import { useUsers } from './-hooks/useUsers'
 import { ProperTable } from '@/components/shared/ProperTable'
+import { z } from 'zod'
 
 export const Route = createFileRoute('/_protected/admin/users/')({
   component: UsersIndex,
+  validateSearch: z.object({
+    q: z.string().optional(),
+    pageIndex: z.number().optional(),
+    pageSize: z.number().optional(),
+    sortBy: z.string().optional(),
+    sortDesc: z.boolean().optional(),
+  }),
 })
 
 function UsersIndex() {
   const { user: currentUser } = Route.useRouteContext()
 
   const {
-    selectedUser,
-    setSelectedUser,
-    showConfirmationDialog,
-    setShowConfirmationDialog,
+    selectedUserToDelete,
+    setSelectedUserToDelete,
     handleDelete,
+    handleSearch,
+    searchValue,
     table,
     isLoading,
   } = useUsers(currentUser!)
 
   const header = useMemo(() => {
-    console.log('header is rendered')
     return (
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-1">
@@ -44,7 +51,7 @@ function UsersIndex() {
   }, [])
 
   return (
-    <AnimatePresence>
+    <AnimatePresence mode="wait">
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -59,26 +66,31 @@ function UsersIndex() {
                 <Loader2 className="w-4 h-4 animate-spin" />
               </div>
             ) : (
-              <ProperTable table={table} />
+              <div className="mt-4">
+                <ProperTable
+                  table={table}
+                  searchValue={searchValue}
+                  onSearchChange={handleSearch}
+                />
+              </div>
             )}
           </CardContent>
         </Card>
         <AnimatePresence mode="wait">
-          {showConfirmationDialog && (
+          {selectedUserToDelete && (
             <ProperAlert
               key="delete-dialog"
-              open={showConfirmationDialog}
+              open={!!selectedUserToDelete}
               setOpen={(open) => {
-                setShowConfirmationDialog(open)
-                if (!open) setSelectedUser(null)
+                setSelectedUserToDelete(open ? selectedUserToDelete : null)
               }}
               onConfirm={handleDelete}
               onCancel={() => {
-                setShowConfirmationDialog(false)
-                setSelectedUser(null)
+                // setShowConfirmationDialog(false)
+                setSelectedUserToDelete(null)
               }}
               title="Delete User"
-              description={`Are you sure you want to delete ${selectedUser?.name || 'this user'}? This action cannot be undone.`}
+              description={`Are you sure you want to delete ${selectedUserToDelete?.name || 'this user'}? This action cannot be undone.`}
             />
           )}
         </AnimatePresence>

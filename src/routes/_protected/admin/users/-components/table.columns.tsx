@@ -1,31 +1,100 @@
 import { ColumnDef } from '@tanstack/react-table'
-import { useMemo } from 'react'
+import { memo, useCallback, useMemo } from 'react'
 import { UserInfo } from '@/db/schemas/db.schema.user'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Link } from '@tanstack/react-router'
-import { EyeIcon, PencilIcon, TrashIcon } from 'lucide-react'
-
+import { ArrowUpDown } from 'lucide-react'
+import { Checkbox } from '@/components/ui/checkbox'
+import { TableRowActions } from '@/components/shared/TableRowActions'
 export interface BuildTableColumnsProps {
+  currentUser: UserInfo
   users: UserInfo[]
-  onDelete: (event: React.MouseEvent<HTMLButtonElement>) => void
-  canBeDeleted: (userId: string) => boolean
+  onDelete: (row: UserInfo) => void
 }
 
 export const buildTableColumns = ({
+  currentUser,
   users,
   onDelete,
-  canBeDeleted,
-}: BuildTableColumnsProps): ColumnDef<UserInfo>[] =>
-  useMemo<ColumnDef<UserInfo>[]>(
+}: BuildTableColumnsProps): ColumnDef<UserInfo>[] => {
+  const canBeDeleted = useCallback(
+    (row: UserInfo) => {
+      return (
+        row.id !== currentUser.id &&
+        row.role !== 'super_admin' &&
+        currentUser.role !== 'super_admin'
+      )
+    },
+    [currentUser],
+  )
+
+  const canBeEdited = useCallback(
+    (row: UserInfo) => {
+      return (
+        row.id !== currentUser.id &&
+        row.role !== 'super_admin' &&
+        currentUser.role !== 'super_admin'
+      )
+    },
+    [currentUser],
+  )
+
+  return useMemo<ColumnDef<UserInfo>[]>(
     () => [
       {
-        header: 'User',
+        id: 'select',
+        header: ({ table }) => {
+          return (
+            <div className="flex w-[10px] items-center justify-center">
+              <Checkbox
+                checked={
+                  table.getIsAllPageRowsSelected() ||
+                  (table.getIsSomeRowsSelected() && 'indeterminate')
+                }
+                onCheckedChange={(value: boolean | 'indeterminate') =>
+                  table.toggleAllPageRowsSelected(!!value)
+                }
+                aria-label="Select all"
+              />
+            </div>
+          )
+        },
+        cell: ({ row }) => {
+          return (
+            <div className="flex w-[10px] items-center justify-center">
+              <Checkbox
+                checked={row.getIsSelected()}
+                onCheckedChange={(value) => row.toggleSelected(!!value)}
+                aria-label="Select row"
+              />
+            </div>
+          )
+        },
+        enableSorting: false,
+        enableHiding: false,
+        size: 20,
+      },
+      {
+        header: ({ column }) => {
+          return (
+            <div className="flex items-center justify-start">
+              <div className="flex-1 text-sm font-medium">Name</div>
+              <SortButton
+                onClick={() =>
+                  column.toggleSorting(column.getIsSorted() === 'asc')
+                }
+              />
+            </div>
+          )
+        },
         sortingFn: (rowA, rowB) => {
           return rowA.original.name.localeCompare(rowB.original.name)
         },
         accessorKey: 'name',
+        enableSorting: true,
+        enableHiding: true,
+        size: 200,
         cell: ({ row }) => {
           let className = ''
           switch (row.original.role) {
@@ -69,20 +138,30 @@ export const buildTableColumns = ({
       {
         header: 'Role',
         accessorKey: 'role',
+        size: 200,
         cell: ({ row }) => {
+          let badge: React.ReactNode = (
+            <Badge variant={'shade-gray'}>User</Badge>
+          )
           switch (row.original.role) {
             case 'super_admin':
-              return <Badge variant={'shade-purple'}>Super Admin</Badge>
+              badge = <Badge variant={'shade-purple'}>Super Admin</Badge>
+              break
             case 'admin':
-              return <Badge variant={'shade-info'}>Admin</Badge>
-            case 'user':
-              return <Badge variant={'shade-gray'}>User</Badge>
+              badge = <Badge variant={'shade-info'}>Admin</Badge>
+              break
+            default:
+              badge = <Badge variant={'shade-gray'}>User</Badge>
+              break
           }
+
+          return <div className="flex items-center gap-2">{badge}</div>
         },
       },
       {
         header: 'Status',
         accessorKey: 'isActive',
+        size: 120,
         cell: ({ row }) => {
           return row.original.isActive ? (
             <Badge variant={'shade-success'}>Active</Badge>
@@ -94,40 +173,21 @@ export const buildTableColumns = ({
       {
         header: () => <div className="text-right mr-4">Actions</div>,
         accessorKey: 'actions',
+        enableHiding: false,
+        size: 150,
         cell: ({ row }) => {
           return (
-            <div className="flex gap-2 justify-end items-center">
-              <Button variant="ghost" size="icon" asChild>
-                <Link
-                  to={'/admin/users/$userId'}
-                  params={{ userId: row.original.id.toString() }}
-                >
-                  <EyeIcon className="w-4 h-4" />
-                </Link>
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                asChild
-                className="text-blue-600 hover:text-blue-600/80 hover:bg-blue-600/10"
-              >
-                <Link
-                  to={'/admin/users/$userId/edit'}
-                  params={{ userId: row.original.id.toString() }}
-                >
-                  <PencilIcon className="w-4 h-4" />
-                </Link>
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                disabled={!canBeDeleted(row.original.id.toString())}
-                onClick={onDelete}
-                data-user-id={row.original.id.toString()}
-                className="text-destructive hover:text-destructive/80 hover:bg-destructive/10"
-              >
-                <TrashIcon className="w-4 h-4" />
-              </Button>
+            <div className="flex flex-1 justify-end">
+              <TableRowActions
+                viewPath={`/admin/users/${row.original.id.toString()}`}
+                editPath={
+                  canBeEdited(row.original)
+                    ? `/admin/users/${row.original.id.toString()}/edit`
+                    : undefined
+                }
+                canBeDeleted={canBeDeleted(row.original)}
+                onDelete={() => onDelete?.(row.original)}
+              />
             </div>
           )
         },
@@ -135,3 +195,17 @@ export const buildTableColumns = ({
     ],
     [users],
   )
+}
+
+const SortButton = memo(({ onClick }: { onClick: () => void }) => {
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={onClick}
+      className="text-muted-foreground hover:text-foreground hover:bg-transparent"
+    >
+      <ArrowUpDown className="w-4 h-4" />
+    </Button>
+  )
+})

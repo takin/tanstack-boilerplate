@@ -10,6 +10,8 @@ import appCss from '../styles.css?url'
 import type { QueryClient } from '@tanstack/react-query'
 import type { UserInfo } from '@/db/schemas'
 import { NotFoundComponent } from '@/components/shared/NotFound'
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
+import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 
 interface MyRouterContext {
   queryClient: QueryClient
@@ -56,6 +58,8 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           <main className="flex-1 overflow-auto">{children}</main>
         </div>
         <Toaster />
+        <ReactQueryDevtools />
+        <TanStackRouterDevtools />
         <Scripts />
       </body>
     </html>

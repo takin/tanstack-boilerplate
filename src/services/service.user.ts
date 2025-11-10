@@ -1,5 +1,5 @@
 import { db } from '@/db'
-import { count, eq, SQL } from 'drizzle-orm'
+import { asc, count, desc, eq, like, or } from 'drizzle-orm'
 import { dbSchemaUser, User, UserInfo } from '@/db/schemas'
 import bcrypt from 'bcryptjs'
 
@@ -38,30 +38,65 @@ export const authenticateUser = async (
   return user
 }
 
+interface OrderBy {
+  id: string
+  desc: boolean
+}
+
 export const getUserList = async (
   offset: number,
   limit: number,
-  whereClause?: SQL<typeof dbSchemaUser>,
+  orderBy?: Array<OrderBy>,
+  search?: string,
 ): Promise<{
   rows: UserInfo[]
   rowCount: number
   pagination: { pageIndex: number; pageSize: number }
+  sorting: Array<OrderBy>
+  search: string
 }> => {
-  const users = await db.query.dbSchemaUser.findMany({
-    offset,
-    limit,
-    where: whereClause ?? undefined,
-  })
+  const preapredOrderBy = []
 
-  console.log('users', users)
+  if (orderBy) {
+    for (const sort of orderBy) {
+      if (sort.desc === true) {
+        preapredOrderBy.push(
+          desc(dbSchemaUser[sort.id as keyof typeof dbSchemaUser] as any),
+        )
+      } else {
+        preapredOrderBy.push(
+          asc(dbSchemaUser[sort.id as keyof typeof dbSchemaUser] as any),
+        )
+      }
+    }
+  }
+
+  let users = []
+
+  if (search) {
+    users = await db
+      .select()
+      .from(dbSchemaUser)
+      .where(
+        or(
+          like(dbSchemaUser.name, `%${search}%`),
+          like(dbSchemaUser.email, `%${search}%`),
+        ),
+      )
+  } else {
+    users = await db
+      .select()
+      .from(dbSchemaUser)
+      .orderBy(...preapredOrderBy)
+      .limit(limit)
+      .offset(offset)
+  }
 
   const rowCount = await db
     .select({ count: count() })
     .from(dbSchemaUser)
-    .where(whereClause ?? undefined)
     .execute()
 
-  console.log('rowCount', rowCount)
   return {
     rows: users,
     rowCount: rowCount[0].count,
@@ -69,5 +104,12 @@ export const getUserList = async (
       pageIndex: offset,
       pageSize: limit,
     },
+    sorting: orderBy ?? [
+      {
+        id: 'created_at',
+        desc: true,
+      },
+    ],
+    search: search ?? '',
   }
 }

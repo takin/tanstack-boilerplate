@@ -31,44 +31,42 @@ function PaginationComponent({
   rowCount,
 }: ProperPaginationProps): React.ReactElement {
   return (
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onFirstPage}
-          disabled={!canPreviousPage}
-        >
-          <ChevronFirst className="w-4 h-4" />
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onPrevPage}
-          disabled={!canPreviousPage}
-        >
-          <ChevronLeftIcon className="w-4 h-4" />
-        </Button>
-        <span className="text-sm text-muted-foreground">
-          Page {pageIndex + 1} of {pageCount} of {rowCount}
-        </span>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onNextPage}
-          disabled={!canNextPage}
-        >
-          <ChevronRightIcon className="w-4 h-4" />
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onLastPage}
-          disabled={!canNextPage}
-        >
-          <ChevronLast className="w-4 h-4" />
-        </Button>
+    <div className="flex items-center justify-between gap-2">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={onFirstPage}
+        disabled={!canPreviousPage}
+      >
+        <ChevronFirst className="w-4 h-4" />
+      </Button>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={onPrevPage}
+        disabled={!canPreviousPage}
+      >
+        <ChevronLeftIcon className="w-4 h-4" />
+      </Button>
+      <div className="text-sm flex-1 text-center w-[150px] text-muted-foreground">
+        Page {pageIndex + 1} of {pageCount} of {rowCount}
       </div>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={onNextPage}
+        disabled={!canNextPage}
+      >
+        <ChevronRightIcon className="w-4 h-4" />
+      </Button>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={onLastPage}
+        disabled={!canNextPage}
+      >
+        <ChevronLast className="w-4 h-4" />
+      </Button>
     </div>
   )
 }
