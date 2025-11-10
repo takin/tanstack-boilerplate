@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { UserInfo } from '@/db/schemas/db.schema.user'
 import { getUserListFn } from '@/server/user.function'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   getCoreRowModel,
   getPaginationRowModel,
@@ -33,6 +33,7 @@ export interface UsersHookReturn {
   pagination: PaginationState
   setPagination: OnChangeFn<PaginationState>
   rowCount: number
+  handleRefresh: () => void
 }
 
 export interface UrlParams {
@@ -46,6 +47,7 @@ export interface UrlParams {
 export function useUsers(currentUser: UserInfo): UsersHookReturn {
   const navigate = useNavigate()
   const routerState = useRouterState()
+  const queryClient = useQueryClient()
 
   /**
    * Temporary state for delete confirmation
@@ -222,6 +224,10 @@ export function useUsers(currentUser: UserInfo): UsersHookReturn {
     }, 0)
   }, [urlParams, navigate, routerState.location.pathname])
 
+  const handleRefresh = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['users'] })
+  }, [queryClient])
+
   // Clear search params when navigating to a different route
   useEffect(() => {
     const newPathname = routerState.location.pathname
@@ -315,5 +321,6 @@ export function useUsers(currentUser: UserInfo): UsersHookReturn {
     pagination,
     setPagination,
     rowCount: data?.rowCount ?? 0,
+    handleRefresh,
   }
 }

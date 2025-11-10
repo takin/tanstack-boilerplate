@@ -4,7 +4,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { motion } from 'framer-motion'
 import { AnimatePresence } from 'framer-motion'
 
-import { Loader2, PlusIcon } from 'lucide-react'
+import { PlusIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ProperAlert } from '@/components/shared/ProperAlert'
 import { useUsers } from './-hooks/useUsers'
@@ -31,8 +31,11 @@ function UsersIndex() {
     handleDelete,
     handleSearch,
     searchValue,
+    handleRefresh,
     table,
     isLoading,
+    isError,
+    error,
   } = useUsers(currentUser!)
 
   const header = useMemo(() => {
@@ -61,19 +64,17 @@ function UsersIndex() {
         {header}
         <Card className="mt-6 pt-4">
           <CardContent>
-            {isLoading ? (
-              <div className="flex justify-center items-center h-full">
-                <Loader2 className="w-4 h-4 animate-spin" />
-              </div>
-            ) : (
-              <div className="mt-4">
-                <ProperTable
-                  table={table}
-                  searchValue={searchValue}
-                  onSearchChange={handleSearch}
-                />
-              </div>
-            )}
+            <div className="mt-4">
+              <ProperTable
+                table={table}
+                isLoading={isLoading}
+                isError={isError}
+                error={error}
+                searchValue={searchValue}
+                onSearchChange={handleSearch}
+                onRefresh={handleRefresh}
+              />
+            </div>
           </CardContent>
         </Card>
         <AnimatePresence mode="wait">

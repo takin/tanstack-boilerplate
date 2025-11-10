@@ -22,24 +22,34 @@ import {
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu'
 import { Button } from '../ui/button'
-import { ChevronDown, X } from 'lucide-react'
+import { AlertTriangleIcon, ChevronDown, RotateCcwIcon, X } from 'lucide-react'
+import { TableSkeleton } from '@/routes/_protected/admin/users/-components/table.skeleton'
+import { Skeleton } from '../ui/skeleton'
 
 export interface ProperTableProps<T> {
   table: TableType<T>
+  isLoading?: boolean
+  isError?: boolean
+  error?: Error | null
   showZebraStripe?: boolean
   showSearch?: boolean
   searchPlaceholder?: string
   searchValue?: string
   onSearchChange?: (value: string) => void
+  onRefresh?: () => void
 }
 
 function TableComponent<T>({
   table,
+  isLoading = false,
+  isError = false,
+  error = null,
   showZebraStripe = false,
   showSearch = true,
   searchPlaceholder = 'Search',
   searchValue,
   onSearchChange,
+  onRefresh,
 }: ProperTableProps<T>): React.ReactElement {
   const [search, setSearch] = useState(searchValue ?? '')
   const debouncedSearch = useDebounce(search)
@@ -143,69 +153,119 @@ function TableComponent<T>({
             ))}
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows.map((row, index) => (
-              <motion.tr
-                key={row.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.5, delay: row.index * 0.05 }}
-                className={`hover:bg-muted border-b border-gray-200 dark:border-neutral-700 ${showZebraStripe && index % 2 === 0 ? 'bg-muted/80' : 'bg-transparent'}`}
-              >
-                {row.getVisibleCells().map((cell) => {
-                  const size = cell.column.getSize()
-                  return (
-                    <TableCell
-                      key={cell.id}
-                      style={{
-                        width: size,
-                        minWidth: size,
-                        maxWidth: size,
-                      }}
-                      className="overflow-hidden"
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </TableCell>
-                  )
-                })}
-              </motion.tr>
-            ))}
+            {isLoading ? (
+              <TableSkeleton
+                columnWidths={table
+                  .getAllColumns()
+                  .filter((column) => column.getIsVisible())
+                  .map((column) => column.getSize() ?? 0)}
+              />
+            ) : isError ? (
+              <TableRow key="error-row">
+                <TableCell
+                  colSpan={table.getAllColumns().length}
+                  className="h-24 text-center"
+                >
+                  <div className="flex flex-col items-center gap-2">
+                    <AlertTriangleIcon className="w-8 h-8 text-destructive" />
+                    <h3 className="text-sm font-medium text-destructive">
+                      LOADING ERROR
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      {error?.message ??
+                        'An error occurred while loading the table.'}
+                    </p>
+                    <div className="mt-6">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          onRefresh?.()
+                        }}
+                      >
+                        <RotateCcwIcon className="w-4 h-4" />
+                        Try Again
+                      </Button>
+                    </div>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : (
+              table.getRowModel().rows.map((row, index) => (
+                <motion.tr
+                  key={row.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.5, delay: row.index * 0.05 }}
+                  className={`hover:bg-muted border-b border-gray-200 dark:border-neutral-700 ${showZebraStripe && index % 2 === 0 ? 'bg-muted/80' : 'bg-transparent'}`}
+                >
+                  {row.getVisibleCells().map((cell) => {
+                    const size = cell.column.getSize()
+                    return (
+                      <TableCell
+                        key={cell.id}
+                        style={{
+                          width: size,
+                          minWidth: size,
+                          maxWidth: size,
+                        }}
+                        className="overflow-hidden"
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </TableCell>
+                    )
+                  })}
+                </motion.tr>
+              ))
+            )}
           </TableBody>
         </Table>
       </div>
       <Separator />
-      <div className="flex items-center justify-between">
-        <div className="text-sm text-muted-foreground">
-          {table.getSelectedRowModel().rows.length} of{' '}
-          {table.getRowModel().rows.length} row(s) selected
+      {isLoading || isError ? (
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-10 w-[200px]" />
+          <Skeleton className="h-10 w-[250px]" />
         </div>
-        {table.getPageCount() > 1 && (
-          <div>
-            <div className="flex justify-end">
-              <ProperPagination
-                canPreviousPage={table.getCanPreviousPage()}
-                canNextPage={table.getCanNextPage()}
-                pageIndex={table.getState().pagination.pageIndex}
-                pageCount={table.getPageCount()}
-                rowCount={table.getRowCount()}
-                onFirstPage={() => table.setPageIndex(0)}
-                onPrevPage={() => {
-                  table.setPageIndex(table.getState().pagination.pageIndex - 1)
-                }}
-                onNextPage={() => {
-                  table.setPageIndex(table.getState().pagination.pageIndex + 1)
-                }}
-                onLastPage={() => {
-                  table.setPageIndex(table.getPageCount() - 1)
-                }}
-              />
-            </div>
+      ) : (
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-muted-foreground">
+            {table.getSelectedRowModel().rows.length} of{' '}
+            {table.getRowModel().rows.length} row(s) selected
           </div>
-        )}
-      </div>
+          {table.getPageCount() > 1 && (
+            <div>
+              <div className="flex justify-end">
+                <ProperPagination
+                  canPreviousPage={table.getCanPreviousPage()}
+                  canNextPage={table.getCanNextPage()}
+                  pageIndex={table.getState().pagination.pageIndex}
+                  pageCount={table.getPageCount()}
+                  rowCount={table.getRowCount()}
+                  onFirstPage={() => table.setPageIndex(0)}
+                  onPrevPage={() => {
+                    table.setPageIndex(
+                      table.getState().pagination.pageIndex - 1,
+                    )
+                  }}
+                  onNextPage={() => {
+                    table.setPageIndex(
+                      table.getState().pagination.pageIndex + 1,
+                    )
+                  }}
+                  onLastPage={() => {
+                    table.setPageIndex(table.getPageCount() - 1)
+                  }}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
