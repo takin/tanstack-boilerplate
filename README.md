@@ -25,6 +25,91 @@ This project uses [Vitest](https://vitest.dev/) for testing. You can run the tes
 pnpm test
 ```
 
+## Browser Testing
+
+This project includes browser testing setup using [K6 Browser](https://grafana.com/docs/k6/latest/using-k6-browser/). Browser tests simulate real users with Chromium to test the `/admin/users` page with authentication.
+
+### Quick Start
+
+Install K6:
+```bash
+# macOS
+brew install k6
+
+# Linux
+sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+echo "deb https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+sudo apt-get update
+sudo apt-get install k6
+```
+
+Install Chromium:
+```bash
+# macOS
+brew install chromium
+
+# Linux
+sudo apt-get install chromium-browser
+```
+
+Run browser tests:
+```bash
+# Browser smoke test (1 minute) - Quick verification
+pnpm k6:browser:smoke
+
+# Comprehensive browser test (30 seconds) - UI validation with screenshots
+pnpm k6:browser
+
+# Browser load test (5 minutes) - Multiple users with real browsers
+pnpm k6:browser:load
+```
+
+### Available Test Scripts
+
+| Script | Duration | VUs | Purpose |
+|--------|----------|-----|---------|
+| `k6-browser-smoke-test.js` | 1 min | 1 | Quick UI verification |
+| `k6-browser-test.js` | 30s | 1 | UI validation, screenshots |
+| `k6-browser-load-test.js` | 5 min | 1-3 | E2E performance testing |
+
+### Features
+
+Browser testing provides:
+- ✅ Real browser simulation (Chromium)
+- ✅ Web Vitals metrics (FCP, LCP, CLS, FID, INP, TTFB)
+- ✅ UI interaction testing (forms, clicks, navigation)
+- ✅ Screenshot capture for debugging
+- ✅ End-to-end user flow testing
+
+### Documentation
+
+- **[Browser Testing Guide](./K6_BROWSER_TESTING.md)** - Comprehensive documentation
+- **[Quick Start Guide](./QUICK_START_K6.md)** - Get started quickly
+- **[Files Summary](./K6_FILES_SUMMARY.md)** - Overview of all files
+
+### Configuration
+
+Set environment variables to customize tests:
+```bash
+export BASE_URL=http://localhost:3000
+export TEST_EMAIL=admin@example.com
+export TEST_PASSWORD=password123
+```
+
+Or pass them inline:
+```bash
+k6 run -e BASE_URL=http://localhost:3000 k6-browser-test.js
+```
+
+### Screenshots
+
+Browser tests automatically save screenshots to the `screenshots/` directory:
+- Success screenshots
+- Error screenshots for debugging
+- Step-by-step screenshots
+
+**Note:** Screenshots are not committed to Git (see `.gitignore`).
+
 ## Styling
 
 This project uses [Tailwind CSS](https://tailwindcss.com/) for styling.

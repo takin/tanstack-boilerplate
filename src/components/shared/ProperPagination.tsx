@@ -33,6 +33,7 @@ function PaginationComponent({
   return (
     <div className="flex items-center justify-between gap-2">
       <Button
+        id="first-page"
         variant="outline"
         size="sm"
         onClick={onFirstPage}
@@ -41,6 +42,7 @@ function PaginationComponent({
         <ChevronFirst className="w-4 h-4" />
       </Button>
       <Button
+        id="prev-page"
         variant="outline"
         size="sm"
         onClick={onPrevPage}
@@ -52,6 +54,7 @@ function PaginationComponent({
         Page {pageIndex + 1} of {pageCount} of {rowCount}
       </div>
       <Button
+        id="next-page"
         variant="outline"
         size="sm"
         onClick={onNextPage}
@@ -60,6 +63,7 @@ function PaginationComponent({
         <ChevronRightIcon className="w-4 h-4" />
       </Button>
       <Button
+        id="last-page"
         variant="outline"
         size="sm"
         onClick={onLastPage}
