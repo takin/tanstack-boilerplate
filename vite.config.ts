@@ -15,7 +15,7 @@ const config = defineConfig({
     tanstackStart(),
     viteReact(),
     nitroV2Plugin({
-      preset: 'node-server',
+      preset: 'bun',
     }),
   ],
 })

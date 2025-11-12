@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useEffectEvent, useState } from 'react'
 import { motion } from 'framer-motion'
 import {
   Table,
@@ -22,9 +22,16 @@ import {
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu'
 import { Button } from '../ui/button'
-import { AlertTriangleIcon, ChevronDown, RotateCcwIcon, X } from 'lucide-react'
+import {
+  AlertTriangleIcon,
+  ChevronDown,
+  RotateCcwIcon,
+  Trash2,
+  X,
+} from 'lucide-react'
 import { TableSkeleton } from '@/routes/_protected/admin/users/-components/table.skeleton'
 import { Skeleton } from '../ui/skeleton'
+import { ProperAlert } from './ProperAlert'
 
 export interface ProperTableProps<T> {
   table: TableType<T>
@@ -53,14 +60,16 @@ function TableComponent<T>({
 }: ProperTableProps<T>): React.ReactElement {
   const [search, setSearch] = useState(searchValue ?? '')
   const debouncedSearch = useDebounce(search)
+  const [open, setOpen] = useState(false)
 
-  // Sync local state with prop if provided (controlled component)
-  // Only sync when searchValue prop changes from external source (e.g., URL)
-  useEffect(() => {
-    if (searchValue !== undefined && searchValue !== search) {
-      setSearch(searchValue)
+  const searchEffectEvent = useEffectEvent((value?: string) => {
+    if (value !== undefined && value !== search) {
+      setSearch(value)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  })
+
+  useEffect(() => {
+    searchEffectEvent(searchValue)
   }, [searchValue])
 
   useEffect(() => {
@@ -76,7 +85,7 @@ function TableComponent<T>({
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         {showSearch && (
-          <div className="relative w-[55%]">
+          <div className="relative w-[45%]">
             <Input
               type="text"
               placeholder={searchPlaceholder}
@@ -98,32 +107,59 @@ function TableComponent<T>({
             )}
           </div>
         )}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm">
-              Columns
-              <ChevronDown className="w-4 h-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuLabel>Columns</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {table
-              .getAllColumns()
-              .filter((column) => column.getCanHide())
-              .map((column) => (
-                <DropdownMenuCheckboxItem
-                  key={column.id}
-                  checked={column.getIsVisible()}
-                  onCheckedChange={(value) => column.toggleVisibility(!!value)}
-                >
-                  {typeof column.columnDef.header === 'function'
-                    ? column.id.charAt(0).toUpperCase() + column.id.slice(1)
-                    : column.columnDef.header}
-                </DropdownMenuCheckboxItem>
-              ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex items-center gap-2">
+          <ProperAlert
+            open={open}
+            setOpen={(open) => {
+              setOpen(open)
+            }}
+            onConfirm={() => {}}
+            onCancel={() => {
+              setOpen(false)
+            }}
+            title="Delete Selected Rows"
+            description={`Are you sure you want to delete ${table.getSelectedRowModel().rows.length} row(s)? This action cannot be undone.`}
+          />
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => {
+              setOpen(true)
+            }}
+            disabled={table.getSelectedRowModel().rows.length === 0}
+          >
+            <Trash2 className="w-4 h-4" />
+            Delete All
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                Columns
+                <ChevronDown className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuLabel>Columns</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {table
+                .getAllColumns()
+                .filter((column) => column.getCanHide())
+                .map((column) => (
+                  <DropdownMenuCheckboxItem
+                    key={column.id}
+                    checked={column.getIsVisible()}
+                    onCheckedChange={(value) =>
+                      column.toggleVisibility(!!value)
+                    }
+                  >
+                    {typeof column.columnDef.header === 'function'
+                      ? column.id.charAt(0).toUpperCase() + column.id.slice(1)
+                      : column.columnDef.header}
+                  </DropdownMenuCheckboxItem>
+                ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
       <div className="border rounded-lg overflow-hidden py-4 px-6">
         <Table className="border-collapse table-fixed">
@@ -246,19 +282,25 @@ function TableComponent<T>({
                   pageIndex={table.getState().pagination.pageIndex}
                   pageCount={table.getPageCount()}
                   rowCount={table.getRowCount()}
-                  onFirstPage={() => table.setPageIndex(0)}
+                  onFirstPage={() => {
+                    table.setPageIndex(0)
+                    table.toggleAllPageRowsSelected(false)
+                  }}
                   onPrevPage={() => {
                     table.setPageIndex(
                       table.getState().pagination.pageIndex - 1,
                     )
+                    table.toggleAllPageRowsSelected(false)
                   }}
                   onNextPage={() => {
                     table.setPageIndex(
                       table.getState().pagination.pageIndex + 1,
                     )
+                    table.toggleAllPageRowsSelected(false)
                   }}
                   onLastPage={() => {
                     table.setPageIndex(table.getPageCount() - 1)
+                    table.toggleAllPageRowsSelected(false)
                   }}
                 />
               </div>

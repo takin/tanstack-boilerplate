@@ -1,12 +1,13 @@
 import { ColumnDef } from '@tanstack/react-table'
 import { memo, useCallback, useMemo } from 'react'
 import { UserInfo } from '@/db/schemas/db.schema.user'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ArrowUpDown } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
 import { TableRowActions } from '@/components/shared/TableRowActions'
+import { formatDate } from '@/lib/utils'
+import { getUserAvatar, getUserBadgeByRole } from '@/lib/user.component'
 export interface BuildTableColumnsProps {
   currentUser: UserInfo
   users: UserInfo[]
@@ -52,9 +53,22 @@ export const buildTableColumns = ({
                   table.getIsAllPageRowsSelected() ||
                   (table.getIsSomeRowsSelected() && 'indeterminate')
                 }
-                onCheckedChange={(value: boolean | 'indeterminate') =>
-                  table.toggleAllPageRowsSelected(!!value)
-                }
+                onCheckedChange={(value: boolean | 'indeterminate') => {
+                  if (
+                    !value ||
+                    value === 'indeterminate' ||
+                    (table.getIsSomePageRowsSelected() && value === true)
+                  ) {
+                    table.toggleAllPageRowsSelected(false)
+                    return
+                  }
+
+                  table.getRowModel().rows.forEach((row) => {
+                    if (canBeDeleted(row.original)) {
+                      row.toggleSelected(true)
+                    }
+                  })
+                }}
                 aria-label="Select all"
               />
             </div>
@@ -65,6 +79,7 @@ export const buildTableColumns = ({
             <div className="flex w-[10px] items-center justify-center">
               <Checkbox
                 checked={row.getIsSelected()}
+                disabled={!canBeDeleted(row.original)}
                 onCheckedChange={(value) => row.toggleSelected(!!value)}
                 aria-label="Select row"
               />
@@ -88,93 +103,88 @@ export const buildTableColumns = ({
             </div>
           )
         },
-        sortingFn: (rowA, rowB) => {
-          return rowA.original.name.localeCompare(rowB.original.name)
-        },
         accessorKey: 'name',
         enableSorting: true,
         enableHiding: true,
         size: 200,
         cell: ({ row }) => {
-          let className = ''
-          switch (row.original.role) {
-            case 'super_admin':
-              className =
-                'bg-purple-500/10 text-purple-600 border border-purple-500/20'
-              break
-            case 'admin':
-              className =
-                'bg-blue-500/10 text-blue-600 border border-blue-500/20'
-              break
-            case 'user':
-              className =
-                'bg-gray-500/10 text-gray-600 border border-gray-500/20'
-              break
-            default:
-              className =
-                'bg-muted/50 text-muted-foreground border border-muted/20'
-          }
-
           return (
             <div className="flex items-center gap-2">
-              <Avatar>
-                <AvatarFallback className={className}>
-                  {row.original.name
-                    .split(' ')
-                    .map((name) => name.charAt(0).toUpperCase())
-                    .join('')}
-                </AvatarFallback>
-              </Avatar>
+              {getUserAvatar(row.original)}
               <div className="flex flex-col">
-                <span className="text-sm font-medium">{row.original.name}</span>
-                <span className="text-xs text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <div className="text-sm font-medium">{row.original.name}</div>
+                  {row.original.id === currentUser.id && (
+                    <Badge variant={'shade-purple'}>
+                      <span className="text-xs">You</span>
+                    </Badge>
+                  )}
+                </div>
+                <div className="text-xs text-muted-foreground">
                   {row.original.email}
-                </span>
+                </div>
               </div>
             </div>
           )
         },
       },
       {
-        header: 'Role',
+        header: () => <div className="text-center mr-4">Role</div>,
         accessorKey: 'role',
         size: 200,
         cell: ({ row }) => {
-          let badge: React.ReactNode = (
-            <Badge variant={'shade-gray'}>User</Badge>
+          return (
+            <div className="flex items-center justify-center gap-2">
+              {getUserBadgeByRole(row.original.role)}
+            </div>
           )
-          switch (row.original.role) {
-            case 'super_admin':
-              badge = <Badge variant={'shade-purple'}>Super Admin</Badge>
-              break
-            case 'admin':
-              badge = <Badge variant={'shade-info'}>Admin</Badge>
-              break
-            default:
-              badge = <Badge variant={'shade-gray'}>User</Badge>
-              break
-          }
-
-          return <div className="flex items-center gap-2">{badge}</div>
         },
       },
       {
-        header: 'Status',
+        header: () => <div className="text-center mr-4">Status</div>,
         accessorKey: 'isActive',
         size: 120,
         cell: ({ row }) => {
           return row.original.isActive ? (
-            <Badge variant={'shade-success'}>Active</Badge>
+            <div className="text-center">
+              <Badge variant={'shade-success'}>Active</Badge>
+            </div>
           ) : (
-            <Badge variant={'shade-danger'}>Inactive</Badge>
+            <div className="text-center">
+              <Badge variant={'shade-danger'}>Inactive</Badge>
+            </div>
           )
         },
       },
       {
-        header: () => <div className="text-right mr-4">Actions</div>,
+        header: () => <div className="text-right">Created At</div>,
+        accessorKey: 'createdAt',
+        size: 120,
+        cell: ({ row }) => {
+          return (
+            <div className="text-sm text-muted-foreground text-right">
+              {formatDate(row.original.createdAt)}
+            </div>
+          )
+        },
+      },
+      {
+        header: () => <div className="text-right">Updated At</div>,
+        accessorKey: 'updatedAt',
+        size: 120,
+        cell: ({ row }) => {
+          return (
+            <div className="text-right text-sm text-muted-foreground">
+              {formatDate(row.original.updatedAt)}
+            </div>
+          )
+        },
+      },
+      {
+        header: () => <div className="text-right mr-4"></div>,
         accessorKey: 'actions',
         enableHiding: false,
-        size: 150,
+        size: 60,
         cell: ({ row }) => {
           return (
             <div className="flex flex-1 justify-end">

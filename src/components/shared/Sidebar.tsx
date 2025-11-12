@@ -22,7 +22,8 @@ import { toast } from 'sonner'
 import { Link, useNavigate, useRouter } from '@tanstack/react-router'
 import { motion } from 'framer-motion'
 import { useTheme } from '@/providers/provider.theme'
-import { Avatar, AvatarFallback } from '../ui/avatar'
+import { getUserAvatar } from '@/lib/user.component'
+import { Skeleton } from '../ui/skeleton'
 
 interface SidebarProps {
   className?: string
@@ -179,14 +180,11 @@ export function Sidebar({ className, isOpen = false }: SidebarProps) {
               className="w-full justify-between h-12 px-3 text-left"
             >
               <div className="flex items-center">
-                <Avatar className="w-10 h-10 rounded-full bg-primary flex items-center justify-center mr-3 border border-border">
-                  <AvatarFallback>
-                    {user?.name
-                      ?.split(' ')
-                      .map((name) => name[0])
-                      .join('')}
-                  </AvatarFallback>
-                </Avatar>
+                {user ? (
+                  getUserAvatar(user)
+                ) : (
+                  <Skeleton className="w-10 h-10 rounded-full" />
+                )}
                 <div className="flex flex-col">
                   <span className="text-sm font-medium text-card-foreground">
                     {user?.name}
@@ -219,10 +217,10 @@ export function Sidebar({ className, isOpen = false }: SidebarProps) {
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              className="text-destructive focus:text-destructive"
+              className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
               onClick={handleLogout}
             >
-              <LogOut className="mr-2 h-4 w-4" />
+              <LogOut className="mr-2 h-4 w-4 text-destructive" />
               <span>Logout</span>
             </DropdownMenuItem>
           </DropdownMenuContent>

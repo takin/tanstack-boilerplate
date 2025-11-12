@@ -15,8 +15,8 @@ export const Route = createFileRoute('/_protected/admin/users/')({
   component: UsersIndex,
   validateSearch: z.object({
     q: z.string().optional(),
-    pageIndex: z.number().optional(),
-    pageSize: z.number().optional(),
+    page: z.number().optional(),
+    limit: z.number().optional(),
     sortBy: z.string().optional(),
     sortDesc: z.boolean().optional(),
   }),

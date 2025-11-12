@@ -1,5 +1,5 @@
 import { db } from '@/db'
-import { asc, count, desc, eq, like, or } from 'drizzle-orm'
+import { asc, count, desc, eq, like, or, SQLWrapper } from 'drizzle-orm'
 import { dbSchemaUser, User, UserInfo } from '@/db/schemas'
 import bcrypt from 'bcryptjs'
 
@@ -61,19 +61,24 @@ export const getUserList = async (
     for (const sort of orderBy) {
       if (sort.desc === true) {
         preapredOrderBy.push(
-          desc(dbSchemaUser[sort.id as keyof typeof dbSchemaUser] as any),
+          desc(
+            dbSchemaUser[sort.id as keyof typeof dbSchemaUser] as SQLWrapper,
+          ),
         )
       } else {
         preapredOrderBy.push(
-          asc(dbSchemaUser[sort.id as keyof typeof dbSchemaUser] as any),
+          asc(dbSchemaUser[sort.id as keyof typeof dbSchemaUser] as SQLWrapper),
         )
       }
     }
   }
 
+  console.log('it was here', preapredOrderBy)
+
   let users = []
 
   if (search) {
+    console.log('it was here', search)
     users = await db
       .select()
       .from(dbSchemaUser)
@@ -106,7 +111,7 @@ export const getUserList = async (
     },
     sorting: orderBy ?? [
       {
-        id: 'created_at',
+        id: 'createdAt',
         desc: true,
       },
     ],

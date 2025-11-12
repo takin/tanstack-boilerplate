@@ -24,8 +24,8 @@ export const dbSchemaUser = pgTable(
     password: text('password').notNull(),
     role: dbSchemaUserRole('role').notNull().default('user'),
     isActive: boolean('is_active').notNull().default(true),
-    created_at: timestamp('created_at').notNull().defaultNow(),
-    updated_at: timestamp('updated_at').notNull().defaultNow(),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },
   (table) => [
     unique('uq_users_email').on(table.email),
