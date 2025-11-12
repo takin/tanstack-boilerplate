@@ -207,108 +207,106 @@ export function useUsers(currentUser: UserInfo): UsersHookReturn {
 
   // Sync URL params to URL when state changes
   // Only sync when we're still on the same route
-  // useEffect(() => {
-  //   // Only sync if we're still on the users route
-  //   if (routerState.location.pathname !== '/admin/users') {
-  //     return
-  //   }
+  useEffect(() => {
+    // Only sync if we're still on the users route
+    if (routerState.location.pathname !== '/admin/users') {
+      return
+    }
 
-  //   isInternalUpdate.current = true
-  //   navigate({
-  //     to: routerState.location.pathname,
-  //     search: urlParams,
-  //     replace: true,
-  //   })
-  //   // Reset flag after navigation
-  //   setTimeout(() => {
-  //     isInternalUpdate.current = false
-  //   }, 0)
-  // }, [urlParams, navigate, routerState.location.pathname])
+    isInternalUpdate.current = true
+    navigate({
+      to: routerState.location.pathname,
+      search: urlParams,
+      replace: true,
+    })
+    // Reset flag after navigation
+    setTimeout(() => {
+      isInternalUpdate.current = false
+    }, 0)
+  }, [urlParams, navigate, routerState.location.pathname])
 
   const handleRefresh = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ['users'] })
   }, [queryClient])
 
   // Clear search params when navigating to a different route
-  // useEffect(() => {
-  //   const newPathname = routerState.location.pathname
+  useEffect(() => {
+    const newPathname = routerState.location.pathname
 
-  //   // If pathname changed and we're no longer on users route, clear search params
-  //   if (
-  //     currentPathname.current !== newPathname &&
-  //     newPathname !== '/admin/users'
-  //   ) {
-  //     // Reset state to default when leaving the route
-  //     setUrlParams({})
-  //     setPagination({ pageIndex: 0, pageSize: 3 })
-  //     setSorting([])
-  //   }
+    // If pathname changed and we're no longer on users route, clear search params
+    if (
+      currentPathname.current !== newPathname &&
+      newPathname !== '/admin/users'
+    ) {
+      // Reset state to default when leaving the route
+      setUrlParams({})
+      setPagination({ pageIndex: 0, pageSize: 3 })
+      setSorting([])
+    }
 
-  //   currentPathname.current = newPathname
-  // }, [routerState.location.pathname])
+    currentPathname.current = newPathname
+  }, [routerState.location.pathname])
 
   // Sync URL to state when URL changes externally (e.g., browser back/forward)
   // Only sync when we're on the users route
-  // useEffect(() => {
-  //   // Skip if we're not on the users route
-  //   if (routerState.location.pathname !== '/admin/users') {
-  //     return
-  //   }
+  useEffect(() => {
+    // Skip if we're not on the users route
+    if (routerState.location.pathname !== '/admin/users') {
+      return
+    }
 
-  //   // Skip if this is an internal update
-  //   if (isInternalUpdate.current) return
+    // Skip if this is an internal update
+    if (isInternalUpdate.current) return
 
-  //   const search = routerState.location.search as unknown as Partial<UrlParams>
-  //   const urlParamsFromUrl: UrlParams = {
-  //     q: search.q,
-  //     pageIndex: search.pageIndex,
-  //     pageSize: search.pageSize,
-  //     sortBy: search.sortBy,
-  //     sortDesc: search.sortDesc,
-  //   }
+    const search = routerState.location.search as unknown as Partial<UrlParams>
+    const urlParamsFromUrl: UrlParams = {
+      q: search.q,
+      pageIndex: search.pageIndex,
+      pageSize: search.pageSize,
+      sortBy: search.sortBy,
+      sortDesc: search.sortDesc,
+    }
 
-  //   // Only update if URL params actually changed
-  //   const hasChanged =
-  //     urlParams.q !== urlParamsFromUrl.q ||
-  //     urlParams.pageIndex !== urlParamsFromUrl.pageIndex ||
-  //     urlParams.pageSize !== urlParamsFromUrl.pageSize ||
-  //     urlParams.sortBy !== urlParamsFromUrl.sortBy ||
-  //     urlParams.sortDesc !== urlParamsFromUrl.sortDesc
+    // Only update if URL params actually changed
+    const hasChanged =
+      urlParams.q !== urlParamsFromUrl.q ||
+      urlParams.pageIndex !== urlParamsFromUrl.pageIndex ||
+      urlParams.pageSize !== urlParamsFromUrl.pageSize ||
+      urlParams.sortBy !== urlParamsFromUrl.sortBy ||
+      urlParams.sortDesc !== urlParamsFromUrl.sortDesc
 
-  //   if (hasChanged) {
-  //     setUrlParams(urlParamsFromUrl)
+    if (hasChanged) {
+      setUrlParams(urlParamsFromUrl)
 
-  //     // Update pagination if changed
-  //     if (
-  //       urlParams.pageIndex !== urlParamsFromUrl.pageIndex ||
-  //       urlParams.pageSize !== urlParamsFromUrl.pageSize
-  //     ) {
-  //       setPagination({
-  //         pageIndex: urlParamsFromUrl.pageIndex ?? 0,
-  //         pageSize: urlParamsFromUrl.pageSize ?? 3,
-  //       })
-  //     }
+      // Update pagination if changed
+      if (
+        urlParams.pageIndex !== urlParamsFromUrl.pageIndex ||
+        urlParams.pageSize !== urlParamsFromUrl.pageSize
+      ) {
+        setPagination({
+          pageIndex: urlParamsFromUrl.pageIndex ?? 0,
+          pageSize: urlParamsFromUrl.pageSize ?? 3,
+        })
+      }
 
-  //     // Update sorting if changed
-  //     if (
-  //       urlParams.sortBy !== urlParamsFromUrl.sortBy ||
-  //       urlParams.sortDesc !== urlParamsFromUrl.sortDesc
-  //     ) {
-  //       if (urlParamsFromUrl.sortBy) {
-  //         setSorting([
-  //           {
-  //             id: urlParamsFromUrl.sortBy,
-  //             desc: urlParamsFromUrl.sortDesc ?? false,
-  //           },
-  //         ])
-  //       } else {
-  //         setSorting([])
-  //       }
-  //     }
-  //   }
-  // }, [routerState.location.searchStr, routerState.location.pathname])
-
-  console.log('it was here', data)
+      // Update sorting if changed
+      if (
+        urlParams.sortBy !== urlParamsFromUrl.sortBy ||
+        urlParams.sortDesc !== urlParamsFromUrl.sortDesc
+      ) {
+        if (urlParamsFromUrl.sortBy) {
+          setSorting([
+            {
+              id: urlParamsFromUrl.sortBy,
+              desc: urlParamsFromUrl.sortDesc ?? false,
+            },
+          ])
+        } else {
+          setSorting([])
+        }
+      }
+    }
+  }, [routerState.location.searchStr, routerState.location.pathname])
 
   return {
     users: data?.rows ?? [],
