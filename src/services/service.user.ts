@@ -73,38 +73,39 @@ export const getUserList = async (
     }
   }
 
-  console.log('it was here', preapredOrderBy)
-
-  let users = []
-
-  if (search) {
-    console.log('it was here', search)
-    users = await db
-      .select()
-      .from(dbSchemaUser)
-      .where(
-        or(
-          like(dbSchemaUser.name, `%${search}%`),
-          like(dbSchemaUser.email, `%${search}%`),
-        ),
+  // Build WHERE clause for search filter
+  const whereClause = search
+    ? or(
+        like(dbSchemaUser.name, `%${search}%`),
+        like(dbSchemaUser.email, `%${search}%`),
       )
-  } else {
-    users = await db
-      .select()
-      .from(dbSchemaUser)
-      .orderBy(...preapredOrderBy)
-      .limit(limit)
-      .offset(offset)
+    : undefined
+
+  // Get filtered users with pagination and sorting
+  const usersQuery = db.select().from(dbSchemaUser)
+
+  if (whereClause) {
+    usersQuery.where(whereClause)
   }
 
-  const rowCount = await db
-    .select({ count: count() })
-    .from(dbSchemaUser)
-    .execute()
+  if (preapredOrderBy.length > 0) {
+    usersQuery.orderBy(...preapredOrderBy)
+  }
+
+  const users = await usersQuery.limit(limit).offset(offset)
+
+  // Get total count with same filter
+  const countQuery = db.select({ count: count() }).from(dbSchemaUser)
+
+  if (whereClause) {
+    countQuery.where(whereClause)
+  }
+
+  const rowCountResult = await countQuery.execute()
 
   return {
     rows: users,
-    rowCount: rowCount[0].count,
+    rowCount: rowCountResult[0].count,
     pagination: {
       pageIndex: offset,
       pageSize: limit,

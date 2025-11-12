@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useEffectEvent, useMemo } from 'react'
 import { UserInfo } from '@/db/schemas/db.schema.user'
 import { getUserListFn } from '@/server/user.function'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -12,7 +12,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table'
 import { useCallback, useRef, useState } from 'react'
-import { buildTableColumns } from '../-components/table.columns'
+import { useTableColumns } from '../-components/table.columns'
 import { useNavigate, useRouterState } from '@tanstack/react-router'
 
 export interface UseUsersProps {
@@ -57,8 +57,14 @@ export function useUsers(currentUser: UserInfo): UsersHookReturn {
 
   const currentUrlSearchParamsString = routerState.location.searchStr
 
-  const getInitialUrlParams = () => {
-    const search = routerState.location.search as unknown as Partial<UrlParams>
+  // Use ref to store initial search params to avoid hook ordering issues
+  const initialSearchRef = useRef(
+    routerState.location.search as unknown as Partial<UrlParams>,
+  )
+
+  // Initialize states with lazy initializers for consistency
+  const [urlParams, setUrlParams] = useState<UrlParams>(() => {
+    const search = initialSearchRef.current
     return {
       q: search.q,
       pageIndex: search.pageIndex,
@@ -66,39 +72,44 @@ export function useUsers(currentUser: UserInfo): UsersHookReturn {
       sortBy: search.sortBy,
       sortDesc: search.sortDesc,
     }
-  }
+  })
 
-  const [urlParams, setUrlParams] = useState<UrlParams>(() =>
-    getInitialUrlParams(),
-  )
-
-  const getInitialPagination = (): PaginationState => {
+  const [pagination, setPagination] = useState<PaginationState>(() => {
+    const search = initialSearchRef.current
     return {
-      pageIndex: urlParams.pageIndex ?? 0,
-      pageSize: urlParams.pageSize ?? 3,
+      pageIndex: search.pageIndex ?? 0,
+      pageSize: search.pageSize ?? 3,
     }
-  }
+  })
 
-  const [pagination, setPagination] =
-    useState<PaginationState>(getInitialPagination)
-
-  const getInitialSorting = (): SortingState => {
-    if (!urlParams.sortBy) return []
+  const [sorting, setSorting] = useState<SortingState>(() => {
+    const search = initialSearchRef.current
+    if (!search.sortBy) return []
     return [
       {
-        id: urlParams.sortBy ?? 'created_at',
-        desc: urlParams.sortDesc ?? false,
+        id: search.sortBy ?? 'created_at',
+        desc: search.sortDesc ?? false,
       },
     ]
-  }
-
-  const [sorting, setSorting] = useState<SortingState>(getInitialSorting)
+  })
 
   // Track if URL update is from internal state change to avoid infinite loop
   const isInternalUpdate = useRef(false)
 
   // Track current pathname to detect route changes
   const currentPathname = useRef(routerState.location.pathname)
+
+  // Track if this is the initial mount to prevent unnecessary sync
+  const isInitialMount = useRef(true)
+
+  // Mark initial mount as complete after first render
+  useEffect(() => {
+    // Use setTimeout to ensure this runs after all initial effects
+    const timer = setTimeout(() => {
+      isInitialMount.current = false
+    }, 0)
+    return () => clearTimeout(timer)
+  }, [])
 
   const handlePaginationChange: OnChangeFn<PaginationState> = useCallback(
     (update) => {
@@ -160,23 +171,24 @@ export function useUsers(currentUser: UserInfo): UsersHookReturn {
   })
 
   // Move handleDeleteConfirmation before columns
-  const handleDeleteConfirmation = useCallback(
-    (row: UserInfo) => {
-      setSelectedUserToDelete(row)
-      // setShowConfirmationDialog(true)
-    },
-    [setSelectedUserToDelete],
-  )
+  const handleDeleteConfirmation = useCallback((row: UserInfo) => {
+    setSelectedUserToDelete(row)
+    // setShowConfirmationDialog(true)
+  }, [])
 
-  // Now columns can safely reference the memoized functions
-  const columns = buildTableColumns({
+  // Memoize data arrays to prevent unnecessary re-renders
+  const tableData = useMemo(() => data?.rows ?? [], [data?.rows])
+  const rowCount = useMemo(() => data?.rowCount ?? 0, [data?.rowCount])
+
+  // Build table columns using optimized hook
+  // Columns are memoized and only recreate when dependencies change
+  const columns = useTableColumns({
     currentUser,
-    users: data?.rows ?? [],
     onDelete: handleDeleteConfirmation,
   })
 
   const table = useReactTable({
-    data: data?.rows ?? [],
+    data: tableData,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -185,31 +197,60 @@ export function useUsers(currentUser: UserInfo): UsersHookReturn {
     manualPagination: true,
     manualFiltering: true,
     manualSorting: true,
-    rowCount: data?.rowCount ?? 0,
+    rowCount,
     state: {
       pagination,
       sorting,
     },
   })
 
-  const handleDelete = useCallback(() => {}, [selectedUserToDelete])
+  const handleDelete = useCallback(() => {}, [])
 
   const handleSearch = useCallback((value: string) => {
     setUrlParams((prevParams) => {
+      // Skip if search value hasn't changed
       if (value === prevParams.q) return prevParams
+
+      // Search is changing, reset pagination to first page
+      setPagination((prev) => ({
+        ...prev,
+        pageIndex: 0,
+      }))
+
       if (value === '') {
+        // Remove search param and reset to first page
         const { q, ...rest } = prevParams
-        return rest
+        return { ...rest, pageIndex: 0 }
       }
-      return { ...prevParams, q: value, pageIndex: 0 } // Reset to first page on search
+      // Set search param and reset to first page
+      return { ...prevParams, q: value, pageIndex: 0 }
     })
   }, [])
 
   // Sync URL params to URL when state changes
-  // Only sync when we're still on the same route
-  useEffect(() => {
+  // Using useEffectEvent to avoid circular dependency
+  const syncStateToUrl = useEffectEvent((urlParams: UrlParams) => {
     // Only sync if we're still on the users route
     if (routerState.location.pathname !== '/admin/users') {
+      return
+    }
+
+    // Skip if this is already an internal update in progress
+    if (isInternalUpdate.current) {
+      return
+    }
+
+    // Check if URL actually needs to be updated
+    const currentSearch = routerState.location
+      .search as unknown as Partial<UrlParams>
+    const needsUpdate =
+      currentSearch.q !== urlParams.q ||
+      currentSearch.pageIndex !== urlParams.pageIndex ||
+      currentSearch.pageSize !== urlParams.pageSize ||
+      currentSearch.sortBy !== urlParams.sortBy ||
+      currentSearch.sortDesc !== urlParams.sortDesc
+
+    if (!needsUpdate) {
       return
     }
 
@@ -219,11 +260,87 @@ export function useUsers(currentUser: UserInfo): UsersHookReturn {
       search: urlParams,
       replace: true,
     })
-    // Reset flag after navigation
+    // Reset flag after navigation with delay to allow router to process
     setTimeout(() => {
       isInternalUpdate.current = false
-    }, 0)
-  }, [urlParams, navigate, routerState.location.pathname])
+    }, 150)
+  })
+
+  // Sync URL to state when URL changes externally (e.g., browser back/forward)
+  // Using useEffectEvent to avoid circular dependency
+  const syncUrlToState = useEffectEvent(() => {
+    // Skip if we're not on the users route
+    if (routerState.location.pathname !== '/admin/users') {
+      return
+    }
+
+    // Skip if this is an internal update
+    if (isInternalUpdate.current) return
+
+    const search = routerState.location.search as unknown as Partial<UrlParams>
+    const urlParamsFromUrl: UrlParams = {
+      q: search.q,
+      pageIndex: search.pageIndex,
+      pageSize: search.pageSize,
+      sortBy: search.sortBy,
+      sortDesc: search.sortDesc,
+    }
+
+    // Use functional update to avoid dependency on urlParams
+    setUrlParams((prevUrlParams) => {
+      const hasChanged =
+        prevUrlParams.q !== urlParamsFromUrl.q ||
+        prevUrlParams.pageIndex !== urlParamsFromUrl.pageIndex ||
+        prevUrlParams.pageSize !== urlParamsFromUrl.pageSize ||
+        prevUrlParams.sortBy !== urlParamsFromUrl.sortBy ||
+        prevUrlParams.sortDesc !== urlParamsFromUrl.sortDesc
+
+      if (hasChanged) {
+        // Update pagination if changed
+        if (
+          prevUrlParams.pageIndex !== urlParamsFromUrl.pageIndex ||
+          prevUrlParams.pageSize !== urlParamsFromUrl.pageSize
+        ) {
+          setPagination({
+            pageIndex: urlParamsFromUrl.pageIndex ?? 0,
+            pageSize: urlParamsFromUrl.pageSize ?? 3,
+          })
+        }
+
+        // Update sorting if changed
+        if (
+          prevUrlParams.sortBy !== urlParamsFromUrl.sortBy ||
+          prevUrlParams.sortDesc !== urlParamsFromUrl.sortDesc
+        ) {
+          if (urlParamsFromUrl.sortBy) {
+            setSorting([
+              {
+                id: urlParamsFromUrl.sortBy,
+                desc: urlParamsFromUrl.sortDesc ?? false,
+              },
+            ])
+          } else {
+            setSorting([])
+          }
+        }
+
+        return urlParamsFromUrl
+      }
+
+      return prevUrlParams
+    })
+  })
+
+  // Sync URL params to URL when state changes
+  useEffect(() => {
+    // Skip sync on initial mount - URL is already correct from initialization
+    if (isInitialMount.current) {
+      return
+    }
+
+    syncStateToUrl(urlParams)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlParams, routerState.location.pathname])
 
   const handleRefresh = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ['users'] })
@@ -248,68 +365,18 @@ export function useUsers(currentUser: UserInfo): UsersHookReturn {
   }, [routerState.location.pathname])
 
   // Sync URL to state when URL changes externally (e.g., browser back/forward)
-  // Only sync when we're on the users route
   useEffect(() => {
-    // Skip if we're not on the users route
-    if (routerState.location.pathname !== '/admin/users') {
+    // Skip sync on initial mount - state is already initialized from URL
+    if (isInitialMount.current) {
       return
     }
 
-    // Skip if this is an internal update
-    if (isInternalUpdate.current) return
-
-    const search = routerState.location.search as unknown as Partial<UrlParams>
-    const urlParamsFromUrl: UrlParams = {
-      q: search.q,
-      pageIndex: search.pageIndex,
-      pageSize: search.pageSize,
-      sortBy: search.sortBy,
-      sortDesc: search.sortDesc,
-    }
-
-    // Only update if URL params actually changed
-    const hasChanged =
-      urlParams.q !== urlParamsFromUrl.q ||
-      urlParams.pageIndex !== urlParamsFromUrl.pageIndex ||
-      urlParams.pageSize !== urlParamsFromUrl.pageSize ||
-      urlParams.sortBy !== urlParamsFromUrl.sortBy ||
-      urlParams.sortDesc !== urlParamsFromUrl.sortDesc
-
-    if (hasChanged) {
-      setUrlParams(urlParamsFromUrl)
-
-      // Update pagination if changed
-      if (
-        urlParams.pageIndex !== urlParamsFromUrl.pageIndex ||
-        urlParams.pageSize !== urlParamsFromUrl.pageSize
-      ) {
-        setPagination({
-          pageIndex: urlParamsFromUrl.pageIndex ?? 0,
-          pageSize: urlParamsFromUrl.pageSize ?? 3,
-        })
-      }
-
-      // Update sorting if changed
-      if (
-        urlParams.sortBy !== urlParamsFromUrl.sortBy ||
-        urlParams.sortDesc !== urlParamsFromUrl.sortDesc
-      ) {
-        if (urlParamsFromUrl.sortBy) {
-          setSorting([
-            {
-              id: urlParamsFromUrl.sortBy,
-              desc: urlParamsFromUrl.sortDesc ?? false,
-            },
-          ])
-        } else {
-          setSorting([])
-        }
-      }
-    }
+    syncUrlToState()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [routerState.location.searchStr, routerState.location.pathname])
 
   return {
-    users: data?.rows ?? [],
+    users: tableData,
     table,
     isLoading,
     isError,
@@ -321,7 +388,7 @@ export function useUsers(currentUser: UserInfo): UsersHookReturn {
     searchValue: urlParams.q ?? '',
     pagination,
     setPagination,
-    rowCount: data?.rowCount ?? 0,
+    rowCount,
     handleRefresh,
   }
 }

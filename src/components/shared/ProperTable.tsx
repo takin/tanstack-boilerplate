@@ -1,4 +1,4 @@
-import React, { useEffect, useEffectEvent, useState } from 'react'
+import React, { useEffect, useEffectEvent, useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import {
   Table,
@@ -68,18 +68,34 @@ function TableComponent<T>({
     }
   })
 
+  const handleSearchChange = useEffectEvent((value: string) => {
+    onSearchChange?.(value)
+  })
+
   useEffect(() => {
     searchEffectEvent(searchValue)
   }, [searchValue])
 
   useEffect(() => {
-    onSearchChange?.(debouncedSearch)
-  }, [debouncedSearch, onSearchChange])
+    handleSearchChange(debouncedSearch)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch])
 
-  const handleClearSearch = () => {
+  const handleClearSearch = useEffectEvent(() => {
     setSearch('')
     onSearchChange?.('')
-  }
+  })
+
+  // Memoize expensive table computations to prevent unnecessary re-renders
+  const selectedRowsCount = useMemo(
+    () => table.getSelectedRowModel().rows.length,
+    [table],
+  )
+
+  const visibleColumns = useMemo(
+    () => table.getAllColumns().filter((column) => column.getCanHide()),
+    [table],
+  )
 
   return (
     <div className="flex flex-col gap-4">
@@ -118,7 +134,7 @@ function TableComponent<T>({
               setOpen(false)
             }}
             title="Delete Selected Rows"
-            description={`Are you sure you want to delete ${table.getSelectedRowModel().rows.length} row(s)? This action cannot be undone.`}
+            description={`Are you sure you want to delete ${selectedRowsCount} row(s)? This action cannot be undone.`}
           />
           <Button
             variant="destructive"
@@ -126,7 +142,7 @@ function TableComponent<T>({
             onClick={() => {
               setOpen(true)
             }}
-            disabled={table.getSelectedRowModel().rows.length === 0}
+            disabled={selectedRowsCount === 0}
           >
             <Trash2 className="w-4 h-4" />
             Delete All
@@ -141,22 +157,17 @@ function TableComponent<T>({
             <DropdownMenuContent>
               <DropdownMenuLabel>Columns</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              {table
-                .getAllColumns()
-                .filter((column) => column.getCanHide())
-                .map((column) => (
-                  <DropdownMenuCheckboxItem
-                    key={column.id}
-                    checked={column.getIsVisible()}
-                    onCheckedChange={(value) =>
-                      column.toggleVisibility(!!value)
-                    }
-                  >
-                    {typeof column.columnDef.header === 'function'
-                      ? column.id.charAt(0).toUpperCase() + column.id.slice(1)
-                      : column.columnDef.header}
-                  </DropdownMenuCheckboxItem>
-                ))}
+              {visibleColumns.map((column) => (
+                <DropdownMenuCheckboxItem
+                  key={column.id}
+                  checked={column.getIsVisible()}
+                  onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                >
+                  {typeof column.columnDef.header === 'function'
+                    ? column.id.charAt(0).toUpperCase() + column.id.slice(1)
+                    : column.columnDef.header}
+                </DropdownMenuCheckboxItem>
+              ))}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -270,8 +281,8 @@ function TableComponent<T>({
       ) : (
         <div className="flex items-center justify-between">
           <div className="text-sm text-muted-foreground">
-            {table.getSelectedRowModel().rows.length} of{' '}
-            {table.getRowModel().rows.length} row(s) selected
+            {selectedRowsCount} of {table.getRowModel().rows.length} row(s)
+            selected
           </div>
           {table.getPageCount() > 1 && (
             <div>

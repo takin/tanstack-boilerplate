@@ -1,5 +1,5 @@
 import { ColumnDef } from '@tanstack/react-table'
-import { memo, useCallback, useMemo } from 'react'
+import { memo, useMemo } from 'react'
 import { UserInfo } from '@/db/schemas/db.schema.user'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -8,39 +8,44 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { TableRowActions } from '@/components/shared/TableRowActions'
 import { formatDate } from '@/lib/utils'
 import { getUserAvatar, getUserBadgeByRole } from '@/lib/user.component'
-export interface BuildTableColumnsProps {
+
+export interface UseTableColumnsProps {
   currentUser: UserInfo
-  users: UserInfo[]
   onDelete: (row: UserInfo) => void
 }
 
-export const buildTableColumns = ({
+/**
+ * Custom hook to build optimized table columns
+ * Renamed from buildTableColumns to follow React Hooks naming convention
+ */
+export const useTableColumns = ({
   currentUser,
-  users,
   onDelete,
-}: BuildTableColumnsProps): ColumnDef<UserInfo>[] => {
-  const canBeDeleted = useCallback(
-    (row: UserInfo) => {
+}: UseTableColumnsProps): ColumnDef<UserInfo>[] => {
+  // Helper functions for permission checks - memoized based on currentUser
+  const canBeDeleted = useMemo(
+    () => (row: UserInfo) => {
       return (
         row.id !== currentUser.id &&
         row.role !== 'super_admin' &&
-        currentUser.role !== 'super_admin'
+        currentUser.role === 'super_admin'
       )
     },
-    [currentUser],
+    [currentUser.id, currentUser.role],
   )
 
-  const canBeEdited = useCallback(
-    (row: UserInfo) => {
+  const canBeEdited = useMemo(
+    () => (row: UserInfo) => {
       return (
         row.id !== currentUser.id &&
         row.role !== 'super_admin' &&
-        currentUser.role !== 'super_admin'
+        currentUser.role === 'super_admin'
       )
     },
-    [currentUser],
+    [currentUser.id, currentUser.role],
   )
 
+  // Memoize columns - only recreate when dependencies actually change
   return useMemo<ColumnDef<UserInfo>[]>(
     () => [
       {
@@ -203,7 +208,8 @@ export const buildTableColumns = ({
         },
       },
     ],
-    [users],
+    // Only recreate columns when these specific values change
+    [canBeDeleted, canBeEdited, currentUser.id, onDelete],
   )
 }
 
