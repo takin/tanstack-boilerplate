@@ -97,6 +97,7 @@ export function LoginComponent() {
                     {(field) => (
                       <field.ProperTextField
                         id={field.name}
+                        autoComplete='on'
                         label="Email"
                         placeholder="Enter your email"
                       />

@@ -16,9 +16,9 @@
     "db:pull": "drizzle-kit pull",
     "db:studio": "drizzle-kit studio",
     "seed:users": "tsx src/seeds.ts",
-    "k6:browser": "k6 run k6-browser-test.js",
-    "k6:browser:smoke": "k6 run k6-browser-smoke-test.js",
-    "k6:browser:load": "k6 run k6-browser-load-test.js"
+    "k6:browser": "k6 run tests/k6-browser-test.js",
+    "k6:browser:smoke": "k6 run tests/k6-browser-smoke-test.js",
+    "k6:browser:load": "k6 run tests/k6-browser-load-test.js"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.15",

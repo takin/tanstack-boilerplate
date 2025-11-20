@@ -46,7 +46,7 @@ export const loginFn = createServerFn({ method: 'POST' })
 export const logoutFn = createServerFn({ method: 'POST' }).handler(async () => {
   const session = await useAppSession()
   if (session?.data.userId) {
-    session.clear()
+    await session.clear()
     return {
       success: true,
       message: 'Logout berhasil',
